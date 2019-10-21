@@ -3,7 +3,8 @@ from tensorflow import keras
 
 import numpy as np
 import matplotlib.pyplot as plt
-import time
+
+# https://arxiv.org/pdf/1610.09585.pdf
 
 
 class ACGan(object):
@@ -16,11 +17,12 @@ class ACGan(object):
         self.noise_input = keras.Input(shape=(self.num_of_noises,), name="Noise")
         self.label_input = keras.Input(shape=(1,), dtype="int32", name="Label")
         self.losses = ["binary_crossentropy", "sparse_categorical_crossentropy"]
+        self.optimizer = keras.optimizers.Adam(0.0002, 0.5)
 
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(
             loss=self.losses,
-            optimizer="adam",
+            optimizer=self.optimizer,
             metrics=["accuracy"]
         )
 
@@ -36,87 +38,64 @@ class ACGan(object):
         )
         self.model.compile(
             loss=self.losses,
-            optimizer="adam",
+            optimizer=self.optimizer,
             metrics=["accuracy"]
         )
         self.model.summary()
-        keras.utils.plot_model(self.model, "models/GAN_Model.png", show_shapes=True, show_layer_names=True, expand_nested=False)
+        keras.utils.plot_model(self.model, "images/GAN_Model.png", show_shapes=True, show_layer_names=True)
 
     def build_discriminator(self)->keras.Model:
         input_1 = keras.Input(self.input_shape, name="images")
-        x = keras.layers.Conv2D(
-            filters=16,
-            kernel_size=(3, 3),
-            padding="same",
-            activation="relu"
-        )(input_1)
-        x = keras.layers.MaxPooling2D((2, 2))(x)
-        x = keras.layers.Conv2D(
-            filters=32,
-            kernel_size=(3, 3),
-            padding="same",
-            activation="relu"
-        )(x)
-        x = keras.layers.MaxPooling2D((2, 2))(x)
-        x = keras.layers.Conv2D(
-            filters=64,
-            kernel_size=(3, 3),
-            padding="same",
-            activation="relu"
-        )(x)
+        x = keras.layers.Conv2D(64, (5, 5), (2, 2), "same")(input_1)
+        x = keras.layers.LeakyReLU()(x)
+        x = keras.layers.Dropout(0.3)(x)
+
+        x = keras.layers.Conv2D(128, (5, 5), (2, 2), "same")(x)
+        x = keras.layers.LeakyReLU()(x)
+        x = keras.layers.Dropout(0.3)(x)
+
         x = keras.layers.Flatten()(x)
-        x = keras.layers.Dense(512, activation="relu")(x)
+
         output_1 = keras.layers.Dense(1, activation="sigmoid", name="validity")(x)
         output_2 = keras.layers.Dense(self.num_of_classes, activation="softmax", name="classes")(x)
 
         model = keras.Model(input_1, [output_1, output_2], name="Discriminator")
         model.summary()
-        keras.utils.plot_model(model, "models/discriminator.png", show_shapes=True, show_layer_names=True, expand_nested=False)
+        keras.utils.plot_model(model, "images/discriminator.png", show_shapes=True, show_layer_names=True)
         return model
 
     def build_generator(self)->keras.Model:
         w, h = self.input_shape[0] // 4, self.input_shape[1] // 4
+        c = self.input_shape[2]
+
         x = keras.layers.Embedding(self.num_of_classes, self.num_of_noises)(self.label_input)
         x = keras.layers.Flatten()(x)
         x = keras.layers.multiply([self.noise_input, x])
-        # x = keras.layers.Dense(1024, activation="relu")(x)
-        x = keras.layers.Dense(128 * w * h, activation="relu")(x)
-        x = keras.layers.Reshape((w, h, 128))(x)
-        x = keras.layers.BatchNormalization(momentum=0.8)(x)
-        x = keras.layers.UpSampling2D()(x)
-        x = keras.layers.Conv2D(
-            filters=64,
-            kernel_size=(3, 3),
-            padding="same",
-            activation="relu"
-        )(x)
-        x = keras.layers.BatchNormalization(momentum=0.8)(x)
-        x = keras.layers.UpSampling2D()(x)
-        x = keras.layers.Conv2D(
-            filters=self.input_shape[2],
-            kernel_size=(3, 3),
-            padding="same",
-            activation="tanh",
-            name="Fake_Image"
-        )(x)
+
+        x = keras.layers.Dense(256 * w * h, use_bias=False)(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.LeakyReLU()(x)
+
+        x = keras.layers.Reshape((w, h, 256))(x)
+
+        x = keras.layers.Conv2DTranspose(128, (5, 5), (1, 1), "same", use_bias=False)(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.LeakyReLU()(x)
+
+        x = keras.layers.Conv2DTranspose(64, (5, 5), (2, 2), "same", use_bias=False)(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.LeakyReLU()(x)
+
+        x = keras.layers.Conv2DTranspose(c, (5, 5), (2, 2), "same", use_bias=False, activation="tanh", name="Fake_Image")(x)
 
         model = keras.Model([self.noise_input, self.label_input], x, name="Generator")
         model.summary()
-        keras.utils.plot_model(model, "models/generator.png", show_shapes=True, show_layer_names=True, expand_nested=False)
+        keras.utils.plot_model(model, "images/generator.png", show_shapes=True, show_layer_names=True)
         return model
 
     def save_model(self):
-        self.discriminator.save("models/discriminator.h5", save_format="tf")
-        self.generator.save("models/generator.h5", save_format="tf")
-
-    def write_log(self, callback, names, logs, batch_no):
-        for name, value in zip(names, logs):
-            summary = tf.Summary()
-            summary_value = summary.value.add()
-            summary_value.simple_value = value
-            summary_value.tag = name
-            callback.writer.add_summary(summary, batch_no)
-            callback.writer.flush()
+        self.discriminator.save("models/discriminator.h5")
+        self.generator.save("models/generator.h5")
 
     def save_samples(self, epoch):
         r, c = 10, 10
@@ -125,6 +104,7 @@ class ACGan(object):
         gen_imgs = self.generator.predict([noise, sampled_labels])
         # Rescale images 0 - 1
         gen_imgs = 0.5 * gen_imgs + 0.5
+        # print(np.min(gen_imgs), np.max(gen_imgs))
 
         fig, axs = plt.subplots(r, c)
         cnt = 0
@@ -143,10 +123,11 @@ class ACGan(object):
 if __name__ == "__main__":
     (X_train, y_train), (_, _) = keras.datasets.cifar10.load_data()
     X_train = X_train.astype(np.float32) / 255 * 2 - 1
-    # X_train = np.expand_dims(X_train, axis=3)
+    if len(X_train.shape) == 3:
+        X_train = np.expand_dims(X_train, axis=3)
     print(X_train.shape, y_train.shape)
 
-    gan = ACGan(input_shape=(32, 32, 3), num_of_classes=10)
+    gan = ACGan(input_shape=X_train.shape[1:], num_of_classes=10, batch_size=128)
     validity_real = np.ones((gan.batch_size, 1))
     validity_fake = np.zeros((gan.batch_size, 1))
 
@@ -168,7 +149,8 @@ if __name__ == "__main__":
 
         noise = np.random.normal(0, 1, (gan.batch_size, gan.num_of_noises))
         y_generated = np.random.randint(0, gan.num_of_classes, (gan.batch_size, 1))
-        X_generated = gan.generator([noise, y_generated])
+        # print(noise.shape, y_generated.shape, noise.dtype)
+        X_generated = gan.generator.predict([noise, y_generated])
 
         d_loss_real = gan.discriminator.train_on_batch(
             X_batch,
@@ -183,28 +165,29 @@ if __name__ == "__main__":
             [validity_real, y_generated]
         )
 
-        # print(d_loss_real, d_loss_fake)
-        # print(g_loss)
-        print("Epoch: %d -- D_loss: %.4f, D_acc1: %.2f, D_acc2: %.2f -- G_loss: %.4f, G_acc1: %.2f, G_acc2: %.2f" % (
-            epoch,
-            (d_loss_real[0] + d_loss_fake[0]) / 2,
-            (d_loss_real[3] + d_loss_fake[3]) / 2,
-            (d_loss_real[4] + d_loss_fake[4]) / 2,
-            g_loss[0],
-            g_loss[3],
-            g_loss[4]
-        ))
         data = {
-            "D_loss": (d_loss_real[0] + d_loss_fake[0]) / 2,
-            "D_acc1": (d_loss_real[3] + d_loss_fake[3]) / 2,
-            "D_acc2": (d_loss_real[4] + d_loss_fake[4]) / 2,
+            "DR_loss": d_loss_real[0],
+            "DR_acc1": d_loss_real[3],
+            "DR_acc2": d_loss_real[4],
+            "DF_loss": d_loss_fake[0],
+            "DF_acc1": d_loss_fake[3],
+            "DF_acc2": d_loss_fake[4],
             "G_loss": g_loss[0],
             "G_acc1": g_loss[3],
             "G_acc2": g_loss[4]
         }
         t_board.on_epoch_end(epoch, data)
 
-        if epoch % 100 == 0:
+        print("Epoch: %d -- DR_acc1: %.2f, DR_acc2: %.2f -- DF_acc1: %.2f, DF_acc2: %.2f -- G_acc1: %.2f, G_acc2: %.2f" % (
+            epoch,
+            data["DR_acc1"], data["DR_acc2"],
+            data["DF_acc1"], data["DF_acc2"],
+            data["G_acc1"], data["G_acc2"]
+        ))
+
+        if epoch % 1000 == 0:
             gan.save_samples(epoch)
+        if epoch % 10000 == 0:
+            gan.save_model()
 
         epoch += 1
