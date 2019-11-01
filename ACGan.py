@@ -203,8 +203,7 @@ if __name__ == "__main__":
             cur_batch += 1
 
         if epoch % 1 == 0:
-            imgs = gan.save_samples(epoch)
-            t_board.on_epoch_end(epoch * max_batch + cur_batch, imgs)
+            gan.save_samples(epoch)
         if epoch % 100 == 0:
             gan.save_model()
 
