@@ -17,7 +17,7 @@ class ACGan(object):
         self.noise_input = keras.Input(shape=(self.num_of_noises,), name="Noise")
         self.label_input = keras.Input(shape=(1,), dtype="int32", name="Label")
         self.losses = ["binary_crossentropy", "sparse_categorical_crossentropy"]
-        self.optimizer = keras.optimizers.Adam(0.0002, 0.5)
+        self.optimizer = keras.optimizers.Adam(0.001)
 
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(
@@ -46,15 +46,17 @@ class ACGan(object):
 
     def build_discriminator(self)->keras.Model:
         input_1 = keras.Input(self.input_shape, name="images")
-        x = keras.layers.Conv2D(64, (5, 5), (2, 2), "same")(input_1)
+        x = keras.layers.Conv2D(32, (5, 5), (1, 1), "same")(input_1)
         x = keras.layers.LeakyReLU()(x)
         x = keras.layers.Dropout(0.1)(x)
+        x = keras.layers.MaxPooling2D()(x)
 
-        x = keras.layers.Conv2D(128, (5, 5), (2, 2), "same")(x)
+        x = keras.layers.Conv2D(64, (5, 5), (1, 1), "same")(x)
         x = keras.layers.LeakyReLU()(x)
         x = keras.layers.Dropout(0.1)(x)
+        x = keras.layers.MaxPooling2D()(x)
 
-        x = keras.layers.Conv2D(256, (5, 5), (1, 1), "same")(x)
+        x = keras.layers.Conv2D(128, (5, 5), (1, 1), "same")(x)
         x = keras.layers.LeakyReLU()(x)
         x = keras.layers.Dropout(0.1)(x)
 
@@ -90,10 +92,6 @@ class ACGan(object):
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.LeakyReLU()(x)
 
-        x = keras.layers.Conv2DTranspose(32, (5, 5), (1, 1), "same", use_bias=False)(x)
-        x = keras.layers.BatchNormalization()(x)
-        x = keras.layers.LeakyReLU()(x)
-
         x = keras.layers.Conv2DTranspose(c, (5, 5), (2, 2), "same", use_bias=False, activation="tanh", name="Fake_Image")(x)
 
         model = keras.Model([self.noise_input, self.label_input], x, name="Generator")
@@ -110,14 +108,15 @@ class ACGan(object):
         noise = np.random.normal(0, 1, (r * c, self.num_of_noises))
         sampled_labels = np.array([num for _ in range(r) for num in range(c)])
         gen_imgs = self.generator.predict([noise, sampled_labels])
-        # Rescale images 0 - 1
         gen_imgs = 0.5 * gen_imgs + 0.5
-        # print(np.min(gen_imgs), np.max(gen_imgs))
 
+        label_names = ["Plane", "Car", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse", "Ship", "Truck"]
         fig, axs = plt.subplots(r, c)
         cnt = 0
         for i in range(r):
             for j in range(c):
+                if i == 0:
+                    axs[i, j].set_title(label_names[j])
                 if self.input_shape[2] == 1:
                     axs[i, j].imshow(gen_imgs[cnt, :, :, 0], cmap="gray")
                 else:
@@ -136,7 +135,7 @@ if __name__ == "__main__":
         X_train = np.expand_dims(X_train, axis=3)
     print(X_train.shape, y_train.shape)
 
-    gan = ACGan(input_shape=X_train.shape[1:], num_of_classes=10, batch_size=128)
+    gan = ACGan(input_shape=X_train.shape[1:], num_of_classes=10, batch_size=256)
     validity_real = np.ones((gan.batch_size, gan.num_of_classes))
     validity_fake = np.zeros((gan.batch_size, gan.num_of_classes))
 
