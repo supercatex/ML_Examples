@@ -54,7 +54,7 @@ class ACGan(object):
         x = keras.layers.LeakyReLU()(x)
         x = keras.layers.Dropout(0.1)(x)
 
-        x = keras.layers.Conv2D(256, (5, 5), (2, 2), "same")(x)
+        x = keras.layers.Conv2D(256, (5, 5), (1, 1), "same")(x)
         x = keras.layers.LeakyReLU()(x)
         x = keras.layers.Dropout(0.1)(x)
 
@@ -90,7 +90,7 @@ class ACGan(object):
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.LeakyReLU()(x)
 
-        x = keras.layers.Conv2DTranspose(32, (5, 5), (2, 2), "same", use_bias=False)(x)
+        x = keras.layers.Conv2DTranspose(32, (5, 5), (1, 1), "same", use_bias=False)(x)
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.LeakyReLU()(x)
 
@@ -181,7 +181,7 @@ if __name__ == "__main__":
             )
 
             data = {
-                "loss_DR": [d_loss_real[0], 1, 1],
+                "loss_DR": d_loss_real[0],
                 "DR_acc1": d_loss_real[3],
                 "DR_acc2": d_loss_real[4],
                 "loss_DF": d_loss_fake[0],
