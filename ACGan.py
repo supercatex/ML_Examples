@@ -48,11 +48,15 @@ class ACGan(object):
         input_1 = keras.Input(self.input_shape, name="images")
         x = keras.layers.Conv2D(64, (5, 5), (2, 2), "same")(input_1)
         x = keras.layers.LeakyReLU()(x)
-        x = keras.layers.Dropout(0.3)(x)
+        x = keras.layers.Dropout(0.1)(x)
 
         x = keras.layers.Conv2D(128, (5, 5), (2, 2), "same")(x)
         x = keras.layers.LeakyReLU()(x)
-        x = keras.layers.Dropout(0.3)(x)
+        x = keras.layers.Dropout(0.1)(x)
+
+        x = keras.layers.Conv2D(256, (5, 5), (2, 2), "same")(x)
+        x = keras.layers.LeakyReLU()(x)
+        x = keras.layers.Dropout(0.1)(x)
 
         x = keras.layers.Flatten()(x)
 
@@ -83,6 +87,10 @@ class ACGan(object):
         x = keras.layers.LeakyReLU()(x)
 
         x = keras.layers.Conv2DTranspose(64, (5, 5), (2, 2), "same", use_bias=False)(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.LeakyReLU()(x)
+
+        x = keras.layers.Conv2DTranspose(32, (5, 5), (2, 2), "same", use_bias=False)(x)
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.LeakyReLU()(x)
 
@@ -118,6 +126,7 @@ class ACGan(object):
                 cnt += 1
         fig.savefig("images/%d.png" % epoch)
         plt.close()
+        return gen_imgs
 
 
 if __name__ == "__main__":
@@ -172,13 +181,13 @@ if __name__ == "__main__":
             )
 
             data = {
-                "DR_loss": d_loss_real[0],
+                "loss_DR": [d_loss_real[0], 1, 1],
                 "DR_acc1": d_loss_real[3],
                 "DR_acc2": d_loss_real[4],
-                "DF_loss": d_loss_fake[0],
+                "loss_DF": d_loss_fake[0],
                 "DF_acc1": d_loss_fake[3],
                 "DF_acc2": d_loss_fake[4],
-                "G_loss": g_loss[0],
+                "loss_G": g_loss[0],
                 "G_acc1": g_loss[3],
                 "G_acc2": g_loss[4]
             }
@@ -194,7 +203,8 @@ if __name__ == "__main__":
             cur_batch += 1
 
         if epoch % 1 == 0:
-            gan.save_samples(epoch)
+            imgs = gan.save_samples(epoch)
+            t_board.on_epoch_end(epoch * max_batch + cur_batch, imgs)
         if epoch % 100 == 0:
             gan.save_model()
 
