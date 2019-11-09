@@ -17,7 +17,7 @@ class ACGan(object):
         self.noise_input = keras.Input(shape=(self.num_of_noises,), name="Noise")
         self.label_input = keras.Input(shape=(1,), dtype="int32", name="Label")
         self.losses = ["binary_crossentropy", "sparse_categorical_crossentropy"]
-        self.optimizer = keras.optimizers.Adam(0.005)
+        self.optimizer = keras.optimizers.Adam(0.0005)
 
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(
@@ -124,7 +124,7 @@ class ACGan(object):
 if __name__ == "__main__":
     import os
     X_train = []
-    y_train = []
+    # y_train = []
     image_path = "../../datasets/animefacedataset/images/"
     image_path_list = os.listdir(image_path)
     for i, p in enumerate(image_path_list):
@@ -132,10 +132,11 @@ if __name__ == "__main__":
         img = keras.preprocessing.image.load_img(path, target_size=(64, 64))
         img = keras.preprocessing.image.img_to_array(img)
         X_train.append(img.astype(np.float32) / 255 * 2 - 1)
-        y_train.append([0])
+        # y_train.append(0)
         print(i + 1, "/", len(image_path_list))
     X_train = np.array(X_train)
-    y_train = np.array(y_train)
+    # y_train = np.array(y_train)
+    y_train = np.zeros((X_train.shape[0], 1))
 
     # (X_train, y_train), (_, _) = keras.datasets.cifar10.load_data()
     # X_train = X_train.astype(np.float32) / 255 * 2 - 1
@@ -171,7 +172,8 @@ if __name__ == "__main__":
             y_batch = y_train[idx[idx_begin:idx_end]]
 
             noise = np.random.normal(0, 1, (gan.batch_size, gan.num_of_noises))
-            y_generated = np.random.randint(0, gan.num_of_classes, (gan.batch_size, 1))
+            # y_generated = np.random.randint(0, gan.num_of_classes, (gan.batch_size, 1))
+            y_generated = np.zeros((gan.batch_size, 1))
             # print(noise.shape, y_generated.shape, noise.dtype)
             X_generated = gan.generator.predict([noise, y_generated])
 
