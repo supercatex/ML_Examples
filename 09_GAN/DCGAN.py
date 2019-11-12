@@ -172,7 +172,7 @@ class DCGAN():
                 else:
                     flag = True
 
-                if g_loss[1] > 0.9 or cur_batch == max_batch - 1:
+                if g_loss[1] > 0.9:
                     self.save_imgs(epoch)
                     # frame = cv2.imread("images/%d.png" % epoch, cv2.IMREAD_UNCHANGED)
                 # cv2.imshow("frame", frame)
