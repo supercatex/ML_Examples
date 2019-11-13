@@ -44,13 +44,8 @@ class ACGan(object):
         self.model.summary()
         keras.utils.plot_model(self.model, "images/_GAN_Model.png", show_shapes=True, show_layer_names=True)
 
-    def acgan_loss(self, y_true, y_pred):
-        keras.losses.binary_crossentropy
-        return 0
-
-    def wasserstein_loss(self, y_true, y_pred):
-        print(keras.backend.mean(y_true * y_pred))
-        return keras.backend.mean(y_true * y_pred)
+    # def wasserstein_loss(self, y_true, y_pred):
+    #     return keras.backend.mean(y_true * y_pred)
 
     def build_discriminator(self)->keras.Model:
         input_1 = keras.Input(self.input_shape, name="images")
