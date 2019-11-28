@@ -38,12 +38,12 @@ class OpenPose(object):
         )
         self.colors = (
             (0, 0, 255),
-            (50, 100, 200), (0, 200, 255), (0, 255, 255),
-            (150, 50, 200), (200, 150, 255), (255, 0, 255),
-            (0, 200, 0), (200, 255, 100), (150, 255, 200),
-            (200, 0, 0), (255, 200, 150), (255, 100, 200),
-            (0, 100, 255), (100, 200, 255),
-            (100, 0, 255), (200, 100, 255)
+            (255, 255, 255), (255, 255, 255), (255, 255, 255),
+            (255, 255, 255), (255, 255, 255), (255, 255, 255),
+            (255, 0, 0), (240, 255, 0), (255, 0, 240),
+            (0, 255, 0), (0, 240, 255), (0, 120, 255),
+            (255, 255, 255), (255, 255, 255),
+            (255, 255, 255), (255, 255, 255)
         )
         self.model = cv2.dnn.readNet(self.model_path, self.proto_path)
 
@@ -172,7 +172,7 @@ class OpenPose(object):
 
         return final_points
 
-    def draw(self, image, one_person_points):
+    def draw(self, image, one_person_points, thickness=2):
         for i, pair in enumerate(self.pairs):
             x1 = one_person_points[pair[0]][0]
             y1 = one_person_points[pair[0]][1]
@@ -180,7 +180,7 @@ class OpenPose(object):
             y2 = one_person_points[pair[1]][1]
             if x1 == -1 or y1 == -1 or x2 == -1 or y2 == -1:
                 continue
-            cv2.line(image, (x1, y1), (x2, y2), self.colors[i], 2)
+            cv2.line(image, (x1, y1), (x2, y2), self.colors[i], thickness)
 
 
 if __name__ == "__main__":
