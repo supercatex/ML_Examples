@@ -126,7 +126,7 @@ class OpenPose(object):
                         valid_pair = np.append(valid_pair, [[points_a[i][3], points_b[max_j][3], max_score]], axis=0)
                 valid_pairs.append(valid_pair)
             else:
-                print("No connection: k = {}".format(k))
+                # print("No connection: k = {}".format(k))
                 invalid_pairs.append(k)
                 valid_pairs.append([])
 
