@@ -6,7 +6,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 
 
-image_shape = (32, 32, 3)
+image_shape = (100, 100, 3)
 
 vgg = VGG16(
     weights='imagenet',
@@ -38,20 +38,20 @@ train_batch_size = 100
 valid_batch_size = 10
 
 train_generator = train_data_gen.flow_from_directory(
-    "../../../datasets/pcms/1126/",
+    "../../../datasets/pcms/features/",
     target_size=image_shape[:2],
     batch_size=train_batch_size,
     class_mode='categorical',
     shuffle=True
 )
 
-validation_generator = valid_data_gen.flow_from_directory(
-    "../../../datasets/pcms/photos/",
-    target_size=image_shape[:2],
-    batch_size=valid_batch_size,
-    class_mode='categorical',
-    shuffle=False
-)
+# validation_generator = valid_data_gen.flow_from_directory(
+#     "../../../datasets/pcms/photos/",
+#     target_size=image_shape[:2],
+#     batch_size=valid_batch_size,
+#     class_mode='categorical',
+#     shuffle=False
+# )
 
 model.compile(loss='categorical_crossentropy',
               optimizer=optimizers.RMSprop(lr=1e-4),
@@ -61,29 +61,29 @@ history = model.fit_generator(
     train_generator,
     steps_per_epoch=train_generator.samples / train_generator.batch_size,
     epochs=30,
-    validation_data=validation_generator,
-    validation_steps=validation_generator.samples / validation_generator.batch_size,
+    # validation_data=validation_generator,
+    # validation_steps=validation_generator.samples / validation_generator.batch_size,
     verbose=1)
 
-model.save('small_last4.h5')
+model.save('model.h5')
 print(history.history)
 
 acc = history.history['acc']
-val_acc = history.history['val_acc']
+# val_acc = history.history['val_acc']
 loss = history.history['loss']
-val_loss = history.history['val_loss']
+# val_loss = history.history['val_loss']
 
 epochs = range(len(acc))
 
 plt.plot(epochs, acc, 'b', label='Training acc')
-plt.plot(epochs, val_acc, 'r', label='Validation acc')
+# plt.plot(epochs, val_acc, 'r', label='Validation acc')
 plt.title('Training and validation accuracy')
 plt.legend()
 
 plt.figure()
 
 plt.plot(epochs, loss, 'b', label='Training loss')
-plt.plot(epochs, val_loss, 'r', label='Validation loss')
+# plt.plot(epochs, val_loss, 'r', label='Validation loss')
 plt.title('Training and validation loss')
 plt.legend()
 

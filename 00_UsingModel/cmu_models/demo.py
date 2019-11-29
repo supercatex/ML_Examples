@@ -1,9 +1,12 @@
 from OpenPose import OpenPose
+from PoseNorimalization import *
 import cv2
+import keras
 import numpy as np
 
 
 pose = OpenPose()
+model = keras.models.load_model("model.h5")
 
 camera = cv2.VideoCapture(0)
 while camera.isOpened():
@@ -11,9 +14,19 @@ while camera.isOpened():
     if not success:
         continue
 
-    points = pose.detect(frame, in_height=168)
-    for p in points:
-        pose.draw(frame, p)
+    # points = pose.detect(frame)
+    output = f(frame, pose)
+    for img in output:
+        img = cv2.resize(img, (100, 100))
+        predict = model.predict(np.array([img]))
+        idx = np.argmax(predict)
+        labels = ['fall', 'sit', 'squat', 'stand']
+        print(idx, labels[idx])
+    # for p in points:
+    #     pose.draw(frame, p)
+    #
+    #     labels = ['fall', 'sit', 'squat', 'stand']
+
 
     cv2.imshow("frame", frame)
 

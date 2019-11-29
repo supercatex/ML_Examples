@@ -63,7 +63,7 @@ class OpenPose(object):
             prob_map = output[0, i, :, :]
             prob_map = cv2.resize(prob_map, (w, h))
             mask_map = cv2.inRange(prob_map, thresh, 1.0)
-            contours, _ = cv2.findContours(mask_map, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            _, contours, _ = cv2.findContours(mask_map, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             for contour in contours:
                 mask_cnt = np.zeros(mask_map.shape)
                 mask_cnt = cv2.fillConvexPoly(mask_cnt, contour, 1)

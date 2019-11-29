@@ -107,7 +107,7 @@ class ACGan(object):
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.ReLU()(x)
 
-        x = keras.layers.Conv2DTranspose(96, (5, 5), (2, 2), "same", use_bias=False)(x)
+        x = keras.layers.Conv2DTranspose(96, (3, 3), (2, 2), "same", use_bias=False)(x)
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.ReLU()(x)
 
@@ -191,21 +191,21 @@ if __name__ == "__main__":
             y_generated = np.random.randint(0, gan.num_of_classes, (gan.batch_size, 1))
             X_generated = gan.generator.predict([noise, y_generated])
 
-            X = np.concatenate((X_batch, X_generated))
-            y1 = np.concatenate((validity_real, validity_fake), axis=0)
-            y2 = np.concatenate((y_batch, y_generated), axis=0)
-
-            d_loss = gan.discriminator.train_on_batch(
-                X, [y1, y2]
+            # X = np.concatenate((X_batch, X_generated))
+            # y1 = np.concatenate((validity_real, validity_fake), axis=0)
+            # y2 = np.concatenate((y_batch, y_generated), axis=0)
+            #
+            # d_loss = gan.discriminator.train_on_batch(
+            #     X, [y1, y2]
+            # )
+            d_loss_real = gan.discriminator.train_on_batch(
+                X_batch,
+                [validity_real, y_batch]
             )
-            # d_loss_real = gan.discriminator.train_on_batch(
-            #     X_batch,
-            #     [validity_real, y_batch]
-            # )
-            # d_loss_fake = gan.discriminator.train_on_batch(
-            #     X_generated,
-            #     [validity_fake, y_generated]
-            # )
+            d_loss_fake = gan.discriminator.train_on_batch(
+                X_generated,
+                [validity_fake, y_generated]
+            )
 
             # for layer in gan.discriminator.layers:
             #     weights = layer.get_weights()
@@ -218,26 +218,27 @@ if __name__ == "__main__":
             )
 
             data = {
-                # "loss_DR": d_loss_real[0],
-                # "DR_acc1": d_loss_real[3],
-                # "DR_acc2": d_loss_real[4],
-                # "loss_DF": d_loss_fake[0],
-                # "DF_acc1": d_loss_fake[3],
-                # "DF_acc2": d_loss_fake[4],
-                "D_loss": d_loss[0],
-                "D_acc1": d_loss[3],
-                "D_acc2": d_loss[4],
+                "loss_DR": d_loss_real[0],
+                "DR_acc1": d_loss_real[3],
+                "DR_acc2": d_loss_real[4],
+                "loss_DF": d_loss_fake[0],
+                "DF_acc1": d_loss_fake[3],
+                "DF_acc2": d_loss_fake[4],
+                # "D_loss": d_loss[0],
+                # "D_acc1": d_loss[3],
+                # "D_acc2": d_loss[4],
                 "G_loss": g_loss[0],
                 "G_acc1": g_loss[3],
                 "G_acc2": g_loss[4]
             }
             t_board.on_epoch_end(epoch * max_batch + cur_batch, data)
 
-            print("Epoch: %d (%d/%d) -- D_loss: %.2f, D_acc1: %.2f, D_acc2: %.2f -- G_loss: %.2f, G_acc1: %.2f, G_acc2: %.2f" % (
-                epoch, cur_batch + 1, max_batch,
-                data["D_loss"], data["D_acc1"], data["D_acc2"],
-                data["G_loss"], data["G_acc1"], data["G_acc2"]
-            ))
+            print("Epoch: %d (%d/%d)" % (epoch, cur_batch + 1, max_batch))
+            # print("Epoch: %d (%d/%d) -- D_loss: %.2f, D_acc1: %.2f, D_acc2: %.2f -- G_loss: %.2f, G_acc1: %.2f, G_acc2: %.2f" % (
+            #     epoch, cur_batch + 1, max_batch,
+            #     data["D_loss"], data["D_acc1"], data["D_acc2"],
+            #     data["G_loss"], data["G_acc1"], data["G_acc2"]
+            # ))
 
             cur_batch += 1
 
