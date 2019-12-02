@@ -20,7 +20,7 @@ while camera.isOpened():
         img = cv2.resize(img, (100, 100))
         predict = model.predict(np.array([img]))
         idx = np.argmax(predict)
-        labels = ['fall', 'sit', 'squat', 'stand']
+        labels = ["stand", "sit", "squat", "fall"]
         print(idx, labels[idx])
     # for p in points:
     #     pose.draw(frame, p)
