@@ -57,7 +57,6 @@ class VGG16Training(object):
         output = layers.Dense(units=self.train_generator.num_classes, activation="softmax", name="softmax")(x)
         self.model = models.Model(input_shape, output)
         self.model.summary()
-        # plot_model(self.model, "VGG16_model.png", show_shapes=True, show_layer_names=True, expand_nested=True)
 
         self.model.compile(
             loss='categorical_crossentropy',
@@ -83,12 +82,34 @@ class VGG16Training(object):
                 verbose=1
             )
         if save_path is not None:
+            name = ".".join(save_path.split(".")[:-1])
+
             self.model.save(save_path)
-            frozen_graph = self.freeze_session(
-                K.get_session(),
-                output_names=[out.op.name for out in self.model.outputs]
-            )
-            tf.train.write_graph(frozen_graph, "", "my_model.pb", as_text=True)
+
+            f = open(name + ".txt", "w")
+            for label in self.train_generator.class_indices:
+                f.write(label + "\n")
+            f.close()
+
+            plot_model(self.model, name + ".png", show_shapes=True, show_layer_names=True, expand_nested=True)
+
+            # frozen_graph = self.freeze_session(
+            #     K.get_session(),
+            #     output_names=[out.op.name for out in self.model.outputs]
+            # )
+            # import tensorflow.tools.graph_transforms as graph_transforms
+            #
+            # frozen_graph = graph_transforms.TransformGraph(frozen_graph,
+            #     ["input_1"],  # inputs nodes
+            #     ["dense_2/Softmax"],  # outputs nodes
+            #     ['fold_constants()',
+            #      'strip_unused_nodes(type=float, shape="None,32,32,1")',
+            #      'remove_nodes(op=Identity, op=CheckNumerics)',
+            #      'fold_batch_norms',
+            #      'fold_old_batch_norms'
+            #      ]
+            # )
+            # tf.train.write_graph(frozen_graph, "", "my_model.pb", as_text=False)
             # print(frozen_graph)
 
     def show_history(self, accuracy_path=None, loss_path=None):
@@ -151,7 +172,7 @@ class VGG16Training(object):
 
 
 if __name__ == "__main__":
-    model = VGG16Training((100, 100, 3), "../../../datasets/pcms/features/", batch_size=1)
+    model = VGG16Training((100, 100, 3), "../../../datasets/pcms/features/", batch_size=128)
     model.train(epochs=1, save_path="model.h5")
     model.show_history("history_acc.jpg", "history_loss.jpg")
     print(model.train_generator.class_indices)
