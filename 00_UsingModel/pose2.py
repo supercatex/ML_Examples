@@ -59,7 +59,7 @@ while cv2.waitKey(1) < 0:
         # Find global maxima of the probMap.
         minVal, prob, minLoc, point = cv2.minMaxLoc(probMap)
 
-        # Scale the point to fit on the original image
+        # Scale the point to fit on the original images
         x = (frameWidth * point[0]) / W
         y = (frameHeight * point[1]) / H
 

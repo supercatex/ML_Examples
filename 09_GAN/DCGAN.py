@@ -182,7 +182,7 @@ class DCGAN():
                 cur_batch += 1
                 print ("%d (%d / %d) [D loss: %f, acc.: %.2f%%] [G loss: %f, acc.: %.2f%%]" % (epoch, cur_batch, max_batch, d_loss[0], 100*d_loss[1], g_loss[0], g_loss[1] * 100))
 
-            # If at save interval => save generated image samples
+            # If at save interval => save generated images samples
             # if epoch % save_interval == 0:
             #     self.save_imgs(epoch)
 

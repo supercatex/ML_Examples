@@ -201,7 +201,7 @@ if __name__ == "__main__":
                 _f1.write(_s)
                 _pose.draw(_image, _p)
             _image = cv2.resize(_image, (_image.shape[1], _image.shape[0]))
-            cv2.imshow("image", _image)
+            cv2.imshow("images", _image)
             cv2.waitKey(100)
     _f1.close()
 
@@ -210,5 +210,5 @@ if __name__ == "__main__":
     # _points = _pose.detect(_image)
     # for _p in _points:
     #     _pose.draw(_image, _p)
-    # cv2.imshow("image", _image)
+    # cv2.imshow("images", _image)
     # cv2.waitKey(0)

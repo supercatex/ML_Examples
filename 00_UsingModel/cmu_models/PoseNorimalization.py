@@ -57,14 +57,14 @@ if __name__ == "__main__":
             _output = f(_image, _pose)
             for _img in _output:
                 cv2.imwrite(os.path.join(_dst_f1, str(int(time.time() * 1000000)) + ".jpg"), _img)
-                cv2.imshow("image", _image)
+                cv2.imshow("images", _image)
                 cv2.imshow("img", _img)
                 cv2.waitKey(500)
 
     # _pose = OpenPose()
     # _image = cv2.imread("sample1.jpg", cv2.IMREAD_COLOR)
     # _output = f(_image, _pose)
-    # cv2.imshow("image", _image)
+    # cv2.imshow("images", _image)
     # for i in range(len(_output)):
     #     cv2.imshow("%d" % i, _output[i])
     # cv2.waitKey(0)
