@@ -10,6 +10,8 @@ from sklearn.pipeline import make_pipeline
 df = pd.read_csv("linear_regression_dataset_sample.csv")
 X = df.iloc[:, 1].values.reshape(-1, 1)
 y = df.iloc[:, 2].values.reshape(-1, 1)
+x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+y_min, y_max = y[:, 0].min() - 50000, y[:, 0].max() + 50000
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
@@ -40,12 +42,27 @@ for name, model in models.items():
     ax = plt.subplot(2, (len(models) + 1) // 2, i)
     ax.scatter(X_train, y_train, color="r")
     ax.scatter(X_test, y_test, color="y")
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
     ax.set_title(name)
 
     data = list(np.concatenate((X_train, y_train), axis=1))
     data.sort(key=lambda x: x[0])
     data = np.array(data)
     ax.plot(data[:, 0], model.predict(data[:, 0].reshape(-1, 1)), color="b")
+
+plt.figure()
+fig, ax = plt.subplots()
+ax.scatter(X_train, y_train, color="r")
+ax.scatter(X_test, y_test, color="y")
+for name, model in models.items():
+    data = list(np.concatenate((X_train, y_train), axis=1))
+    data.sort(key=lambda x: x[0])
+    data = np.array(data)
+    ax.plot(data[:, 0], model.predict(data[:, 0].reshape(-1, 1)), label=name)
+ax.set_xlim(x_min, x_max)
+ax.set_ylim(y_min, y_max)
+ax.legend()
 
 plt.figure()
 plt.plot(range(1, len(models) + 1), scores)
